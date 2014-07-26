@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+  <title>Stripe Getting Started Form</title>
+ 
+  <!-- The required Stripe lib -->
+  <script type="text/javascript" src="https://js.stripe.com/v2/"></script>
+ 
+  <!-- jQuery is used only for this example; it isn't required to use Stripe -->
+  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+ 
+  <script type="text/javascript">
+    // This identifies your website in the createToken call below
+    Stripe.setPublishableKey('pk_test_ywKTvpud6JHfCvuRHnvpuLPo');
+ 
+    var stripeResponseHandler = function(status, response) {
+      alert("THIS METHOD WAS CALLED");
+      var $form = $('#new_charge');
+ 
+      if (response.error) {
+        console.log(response.error.message);
+        // Show the errors on the form
+        $form.find('.payment-errors').text(response.error.message);
+        $form.find('input[type=submit]').prop('disabled', false);
+      } else {
+        // token contains id, last4, and card type
+        var token = response.id;
+        // Insert the token into the form so it gets submitted to the server
+        //$form.append($('<input type="hidden" name="stripeToken" id="stripeTokenField"/>').val(token));
+        $('#charge_stripe_card_token').val(token);
+        console.log("received token: " + token);
+        console.log("Created this input: " + $("#stripeTokenField"));
+        // and re-submit
+        $form.get(0).submit();
+      }
+    };
+ 
+    jQuery(function($) {
+      $('#new_charge').submit(function(e) {
+        e.preventDefault();
+        var $form = $(this);
+
+        alert("This Method blahhhhh alert");
+ 
+        // Disable the submit button to prevent repeated clicks
+        $form.find('input[type=submit]').prop('disabled', true);
+ 
+        Stripe.card.createToken($form, stripeResponseHandler);
+ 
+        // Prevent the form from submitting with the default action
+        return false;
+
+      });
+    });
+  </script>
+</head>
+
+
+<%= form_for @charge do |f| %>
+  
+  <div class="form-inputs">
+    <div class="row">
+        <%= f.hidden_field :stripe_card_token %>
+        <div class="small-12 medium-6 large-2 columns">
+          <%= label_tag :amount, "Amount" %>
+        </div>
+        <div class="small-12 medium-6 large-2 columns">
+          <%= f.number_field :amount %>
+        </div>
+        <div class="small-12 medium-6 large-2 columns">
+          <%= label_tag :card_number, "Credit Card Number:" %>
+        </div>
+        <div class="small-12 medium-6 large-10 columns">
+          <%= text_field_tag :card_number, nil, :data => {:stripe => 'number'} %>
+        </div>
+        <div class="small-12 medium-6 large-2 columns">
+          <%= label_tag :card_code, "Security Code on Card (CVV):" %>
+        </div>
+        <div class="small-12 medium-6 large-10 columns end">
+          <%= text_field_tag :card_code, nil, :data => {:stripe => 'cvc'} %>
+        </div>
+        <div class="small-12 medium-6 large-2 columns">
+          <%= label_tag :card_month, "Card Expiration:" %>
+        </div>
+        <div class="small-6 medium-3 columns">
+          <%= select_month nil, {name: nil, id: "card_month"}, :data => {:stripe => 'exp-month'} %>
+        </div>
+        <div class="small-6 medium-3 columns">
+          <%= select_year nil, {name: nil, id: "card_year"}, :data => {:stripe => 'exp-year'} %>
+        </div>
+      
+      
+    </div>
+    <div class="row">
+      <div class="form-actions small-9 small-offset-2 columns">
+        <%= f.submit "Donate" %>
+      </div>
+    </div>
+  </div>
+<% end %>
